@@ -1,118 +1,47 @@
 'use client'
 
-import React, {createContext, useContext, useState, useEffect} from 'react'
-import {
-  UserContextClient,
-  getUserProfile,
-  login as loginApi,
-  register as registerApi,
-  logout as logoutApi,
-  refreshAccessToken,
-} from '@/lib/auth'
-import {CreateUserDto, LoginDto} from '@yatms/common'
+import React, {createContext, useContext, useEffect} from 'react'
+import {useAuthProfile, useRefreshToken} from '@/hooks/useAuth'
+import {UserContextClient} from '@/lib/auth'
 
 interface AuthContextType {
   user: UserContextClient | null
-  login: (credentials: LoginDto) => Promise<void>
-  register: (userData: CreateUserDto) => Promise<void>
-  logout: () => Promise<void>
-  refreshToken: () => Promise<boolean>
   loading: boolean
+  error: Error | null
+  refetch: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({children}: {children: React.ReactNode}) {
-  const [user, setUser] = useState<UserContextClient | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userData = await getUserProfile()
-        setUser(userData)
-      } catch (error) {
-        console.error('Failed to get user data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUser()
-  }, [])
+  const {
+    data: user,
+    isLoading,
+    isFetching,
+    isFetched,
+    error,
+    refetch,
+  } = useAuthProfile()
+  const refreshTokenMutation = useRefreshToken()
 
   useEffect(() => {
     if (!user) return
-
     const interval = setInterval(
-      () => {
-        refreshAccessToken()
-          .then((success) => {
-            if (!success) {
-              logout()
-            }
-          })
-          .catch(() => {
-            logout()
-          })
-      },
+      () => refreshTokenMutation.mutate(),
       30 * 60 * 1000
     )
-
     return () => clearInterval(interval)
-  }, [user])
-
-  const login = async (credentials: LoginDto) => {
-    setLoading(true)
-    try {
-      await loginApi(credentials)
-      const userData = await getUserProfile()
-      setUser(userData)
-    } catch (error) {
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const register = async (userDataInput: CreateUserDto) => {
-    setLoading(true)
-    try {
-      await registerApi(userDataInput)
-      const userData = await getUserProfile()
-      setUser(userData)
-    } catch (error) {
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const logout = async () => {
-    try {
-      await logoutApi()
-      setUser(null)
-    } catch (error) {
-      console.error('Logout error:', error)
-    }
-  }
-
-  const refreshToken = async (): Promise<boolean> => {
-    const success = await refreshAccessToken()
-
-    if (success) {
-      const userData = await getUserProfile()
-      if (userData) {
-        setUser(userData)
-      }
-    }
-
-    return success
-  }
+  }, [user, refreshTokenMutation])
 
   return (
     <AuthContext.Provider
-      value={{user, login, register, logout, refreshToken, loading}}
+      value={{
+        user: user || null,
+        loading: isLoading || isFetching,
+        isFetched, // expose this
+        error: error as Error | null,
+        refetch,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -56,7 +56,6 @@ export async function register(userData: CreateUserDto): Promise<AuthResponse> {
 
     const data = await response.json()
 
-    // Store refresh token if present
     if (data.refreshToken) {
       refreshTokenInMemory = data.refreshToken
     }
@@ -120,11 +119,9 @@ export async function getUserProfile(): Promise<UserContextClient | null> {
     })
 
     if (response.status === 401) {
-      // Try to refresh the token
       const refreshed = await refreshAccessToken()
 
       if (refreshed) {
-        // Retry with the new token
         return getUserProfile()
       }
 
