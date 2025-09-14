@@ -38,7 +38,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
       value={{
         user: user || null,
         loading: isLoading || isFetching,
-        isFetched, // expose this
+        isFetched,
         error: error as Error | null,
         refetch,
       }}
