@@ -1,9 +1,10 @@
 'use client'
 
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {useAuth} from '@/context/AuthContext'
 import Link from 'next/link'
+import {useRegister} from '@/hooks/useAuth'
 
 export default function Register() {
   const [username, setUsername] = useState('')
@@ -13,8 +14,15 @@ export default function Register() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
-  const {register, loading} = useAuth()
+  const {user: authenticatedUser, loading} = useAuth()
+  const registerMutation = useRegister()
   const router = useRouter()
+
+  useEffect(() => {
+    if (authenticatedUser && !loading) {
+      router.push('/dashboard')
+    }
+  }, [authenticatedUser, loading, router])
 
   const validateForm = () => {
     if (!username || !email || !password || !confirmPassword) {
@@ -48,7 +56,7 @@ export default function Register() {
     if (!validateForm()) return
 
     try {
-      await register({
+      registerMutation.mutate({
         username,
         email,
         password,
@@ -58,8 +66,6 @@ export default function Register() {
         isActive: true,
         lastLogin: new Date(),
       })
-
-      router.push('/dashboard')
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error.message || 'Registration failed')

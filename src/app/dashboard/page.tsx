@@ -2,15 +2,19 @@
 
 import {useAuth} from '@/context/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import {useRouter} from 'next/navigation'
+import {useLogout} from '@/hooks/useAuth'
+import {useEffect} from 'react'
 
 export default function Dashboard() {
-  const {user, logout} = useAuth()
-  const router = useRouter()
+  const {user, loading} = useAuth()
+  const logoutMutation = useLogout()
+
+  useEffect(() => {
+    console.log({user})
+  }, [user])
 
   const handleLogout = () => {
-    logout()
-    router.push('/login')
+    logoutMutation.mutate()
   }
 
   return (
@@ -33,6 +37,7 @@ export default function Dashboard() {
                 <button
                   onClick={handleLogout}
                   className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded'
+                  disabled={loading}
                 >
                   Logout
                 </button>

@@ -1,28 +1,27 @@
 'use client'
 
-import {useState} from 'react'
-import {useRouter} from 'next/navigation'
+import {useEffect, useState} from 'react'
+import {useLogin} from '@/hooks/useAuth'
+import Link from 'next/link'
 import {useAuth} from '@/context/AuthContext'
-import Link from 'next/dist/client/link'
+import {useRouter} from 'next/navigation'
 
 export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const {login, loading} = useAuth()
+  const loginMutation = useLogin()
+  const {user: authenticatedUser, loading} = useAuth()
   const router = useRouter()
+
+  useEffect(() => {
+    if (authenticatedUser && !loading) {
+      router.push('/dashboard')
+    }
+  }, [authenticatedUser, loading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-
-    try {
-      await login({username, password})
-      router.push('/dashboard')
-    } catch (error) {
-      setError('Invalid username or password')
-      console.error('External Login error:', error)
-    }
+    loginMutation.mutate({username, password})
   }
 
   return (
@@ -32,13 +31,13 @@ export default function Login() {
           Transportation Management System
         </h1>
 
-        {error && (
+        {loginMutation.error && (
           <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4'>
-            {error}
+            {loginMutation.error.message || 'Login failed'}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className='space-y-6'>
+        <form onSubmit={handleSubmit} className='space-y-4'>
           <div>
             <label
               className='block text-gray-700 text-sm font-bold mb-2'
@@ -75,18 +74,22 @@ export default function Login() {
 
           <button
             type='submit'
-            disabled={loading}
+            disabled={loginMutation.isPending}
             className='w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50'
           >
-            {loading ? 'Loading...' : 'Log In'}
+            {loginMutation.isPending ? 'Logging in...' : 'Login'}
           </button>
+
+          <div className='text-center mt-4'>
+            Don&apos;t have an account?{' '}
+            <Link
+              href='/register'
+              className='text-blue-500 hover:text-blue-700'
+            >
+              Register
+            </Link>
+          </div>
         </form>
-        <div className='text-center mt-4'>
-          Don&apos;t have an account?{' '}
-          <Link href='/register' className='text-blue-500 hover:text-blue-700'>
-            Register
-          </Link>
-        </div>
       </div>
     </div>
   )
