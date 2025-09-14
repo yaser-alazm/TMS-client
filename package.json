@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.87.4",
+    "@tanstack/react-query-devtools": "^5.87.4",
     "@yatms/common": "^1.0.41",
     "jwt-decode": "^4.0.0",
     "next": "15.5.2",
