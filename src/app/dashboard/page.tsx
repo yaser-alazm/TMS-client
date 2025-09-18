@@ -9,10 +9,6 @@ export default function Dashboard() {
   const {user, loading} = useAuth()
   const logoutMutation = useLogout()
 
-  useEffect(() => {
-    console.log({user})
-  }, [user])
-
   const handleLogout = () => {
     logoutMutation.mutate()
   }

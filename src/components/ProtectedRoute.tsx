@@ -15,9 +15,9 @@ export default function ProtectedRoute({
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && isFetched && !user) {
+    if (isFetched && !loading && !user) {
       router.replace('/login')
-    } else if (!loading && user && requiredRoles.length > 0) {
+    } else if (isFetched && !loading && user && requiredRoles.length > 0) {
       // Check if user has required roles
       const hasRequiredRole = requiredRoles.some((role) =>
         user.roles.includes(role)
@@ -28,18 +28,20 @@ export default function ProtectedRoute({
     }
   }, [user, loading, router, requiredRoles, isFetched])
 
-  if (loading) {
+  if (loading || !isFetched) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
-        Loading...
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2'></div>
+          Loading...
+        </div>
       </div>
     )
   }
 
   if (!user) {
-    return null // Will redirect to login
+    return null
   }
 
-  // If user has required roles or no roles required, render the children
   return <>{children}</>
 }

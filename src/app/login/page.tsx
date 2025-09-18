@@ -13,11 +13,12 @@ export default function Login() {
   const {user: authenticatedUser, loading} = useAuth()
   const router = useRouter()
 
+  // Only redirect if user is already authenticated (not from login success)
   useEffect(() => {
-    if (authenticatedUser && !loading) {
+    if (authenticatedUser && !loading && !loginMutation.isPending) {
       router.push('/dashboard')
     }
-  }, [authenticatedUser, loading, router])
+  }, [authenticatedUser, loading, router, loginMutation.isPending])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
