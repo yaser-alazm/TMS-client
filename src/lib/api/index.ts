@@ -23,6 +23,7 @@ export async function fetchWithAuth<T>(
     })
 
     if (response.status === 401 && !skipRefresh) {
+      // Only try to refresh if we have a refresh token available
       const refreshed = await refreshAccessToken()
 
       if (refreshed) {

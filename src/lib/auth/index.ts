@@ -47,8 +47,6 @@ export async function register(userData: CreateUserDto): Promise<AuthResponse> {
       credentials: 'include',
     })
 
-    console.log({response})
-
     if (!response.ok) {
       const error = await response.json()
       throw new Error(error.message || 'Registration failed')
@@ -69,16 +67,14 @@ export async function register(userData: CreateUserDto): Promise<AuthResponse> {
 
 export async function refreshAccessToken(): Promise<boolean> {
   try {
-    const token = refreshTokenInMemory
-
-    if (!token) {
-      return false
+    if (!refreshTokenInMemory) {
+      return false;
     }
-
+    
     const response = await fetch(`${API_URL}/api/auth/refresh`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({refreshToken: token}),
+      body: JSON.stringify({refreshToken: refreshTokenInMemory}),
       credentials: 'include',
     })
 
@@ -119,10 +115,12 @@ export async function getUserProfile(): Promise<UserContextClient | null> {
     })
 
     if (response.status === 401) {
-      const refreshed = await refreshAccessToken()
+      if (refreshTokenInMemory) {
+        const refreshed = await refreshAccessToken()
 
-      if (refreshed) {
-        return getUserProfile()
+        if (refreshed) {
+          return getUserProfile()
+        }
       }
 
       return null
