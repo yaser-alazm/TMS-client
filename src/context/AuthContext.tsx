@@ -58,7 +58,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
         clearInterval(refreshIntervalRef.current)
       }
       
-      // Set up new interval (refresh every 30 minutes, tokens expire in 1 hour)
+      // Set up new interval (refresh every 45 minutes, tokens expire in 1 hour)
       refreshIntervalRef.current = setInterval(async () => {
         try {
           const success = await refreshAccessToken()
@@ -70,7 +70,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
           setLocalUser(null)
           setLocalError(error as Error)
         }
-      }, 30 * 60 * 1000) // 30 minutes
+      }, 45 * 60 * 1000) // 45 minutes
     } else {
       if (refreshIntervalRef.current) {
         clearInterval(refreshIntervalRef.current)

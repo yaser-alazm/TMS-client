@@ -11,6 +11,27 @@ const API_URL =
 
 let refreshTokenInMemory: string | null = null
 
+// Helper function to get refresh token from cookies
+function getRefreshTokenFromCookies(): string | null {
+  if (typeof document === 'undefined') return null
+  
+  const cookies = document.cookie.split(';')
+  const refreshTokenCookie = cookies.find(cookie => 
+    cookie.trim().startsWith('refresh_token=')
+  )
+  
+  if (refreshTokenCookie) {
+    return refreshTokenCookie.split('=')[1]
+  }
+  
+  return null
+}
+
+// Initialize refresh token from cookies on module load
+if (typeof window !== 'undefined') {
+  refreshTokenInMemory = getRefreshTokenFromCookies()
+}
+
 export async function login(credentials: LoginDto): Promise<AuthResponse> {
   try {
     const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -67,14 +88,23 @@ export async function register(userData: CreateUserDto): Promise<AuthResponse> {
 
 export async function refreshAccessToken(): Promise<boolean> {
   try {
-    if (!refreshTokenInMemory) {
+    // Try to get refresh token from memory first, then from cookies
+    let token = refreshTokenInMemory
+    if (!token) {
+      token = getRefreshTokenFromCookies()
+      if (token) {
+        refreshTokenInMemory = token
+      }
+    }
+    
+    if (!token) {
       return false;
     }
     
     const response = await fetch(`${API_URL}/api/auth/refresh`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({refreshToken: refreshTokenInMemory}),
+      body: JSON.stringify({refreshToken: token}),
       credentials: 'include',
     })
 
@@ -92,6 +122,7 @@ export async function refreshAccessToken(): Promise<boolean> {
     return true
   } catch (error) {
     console.error('Token refresh failed:', error)
+    refreshTokenInMemory = null
     return false
   }
 }
@@ -115,6 +146,14 @@ export async function getUserProfile(): Promise<UserContextClient | null> {
     })
 
     if (response.status === 401) {
+      // Try to get refresh token from cookies if not in memory
+      if (!refreshTokenInMemory) {
+        const tokenFromCookies = getRefreshTokenFromCookies()
+        if (tokenFromCookies) {
+          refreshTokenInMemory = tokenFromCookies
+        }
+      }
+      
       if (refreshTokenInMemory) {
         const refreshed = await refreshAccessToken()
 
