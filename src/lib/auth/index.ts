@@ -9,6 +9,8 @@ const API_URL =
   (typeof window !== 'undefined' && window.location.origin) ||
   'http://localhost:4000'
 
+const USER_SERVICE_URL = 'http://localhost:4001'
+
 let refreshTokenInMemory: string | null = null
 
 // Helper function to get refresh token from cookies
@@ -34,10 +36,11 @@ if (typeof window !== 'undefined') {
 
 export async function login(credentials: LoginDto): Promise<AuthResponse> {
   try {
-    const response = await fetch(`${API_URL}/api/auth/login`, {
+    const response = await fetch(`${USER_SERVICE_URL}/auth/login`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(credentials),
+      mode: 'cors',
       credentials: 'include',
     })
 
@@ -48,8 +51,9 @@ export async function login(credentials: LoginDto): Promise<AuthResponse> {
 
     const data = await response.json()
 
-    if (data.refreshToken) {
-      refreshTokenInMemory = data.refreshToken
+    const refreshTokenFromCookies = getRefreshTokenFromCookies()
+    if (refreshTokenFromCookies) {
+      refreshTokenInMemory = refreshTokenFromCookies
     }
 
     return data
@@ -61,10 +65,11 @@ export async function login(credentials: LoginDto): Promise<AuthResponse> {
 
 export async function register(userData: CreateUserDto): Promise<AuthResponse> {
   try {
-    const response = await fetch(`${API_URL}/api/auth/register`, {
+    const response = await fetch(`${USER_SERVICE_URL}/auth/register`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(userData),
+      mode: 'cors',
       credentials: 'include',
     })
 
@@ -75,8 +80,9 @@ export async function register(userData: CreateUserDto): Promise<AuthResponse> {
 
     const data = await response.json()
 
-    if (data.refreshToken) {
-      refreshTokenInMemory = data.refreshToken
+    const refreshTokenFromCookies = getRefreshTokenFromCookies()
+    if (refreshTokenFromCookies) {
+      refreshTokenInMemory = refreshTokenFromCookies
     }
 
     return data
@@ -101,10 +107,11 @@ export async function refreshAccessToken(): Promise<boolean> {
       return false;
     }
     
-    const response = await fetch(`${API_URL}/api/auth/refresh`, {
+    const response = await fetch(`${USER_SERVICE_URL}/auth/refresh`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({refreshToken: token}),
+      mode: 'cors',
       credentials: 'include',
     })
 
@@ -115,8 +122,9 @@ export async function refreshAccessToken(): Promise<boolean> {
 
     const data = await response.json()
 
-    if (data.refreshToken) {
-      refreshTokenInMemory = data.refreshToken
+    const refreshTokenFromCookies = getRefreshTokenFromCookies()
+    if (refreshTokenFromCookies) {
+      refreshTokenInMemory = refreshTokenFromCookies
     }
 
     return true
@@ -129,36 +137,44 @@ export async function refreshAccessToken(): Promise<boolean> {
 
 export async function logout(): Promise<void> {
   try {
-    await fetch(`${API_URL}/api/auth/logout`, {
+    await fetch(`${USER_SERVICE_URL}/auth/logout`, {
       method: 'POST',
       credentials: 'include',
+      mode: 'cors',
     })
+
+    // Clear local token
     refreshTokenInMemory = null
   } catch (error) {
     console.error('Logout error:', error)
+    refreshTokenInMemory = null
   }
 }
 
 export async function getUserProfile(): Promise<UserContextClient | null> {
   try {
-    const response = await fetch(`${API_URL}/api/auth/me`, {
+    const response = await fetch(`${USER_SERVICE_URL}/users/me`, {
       credentials: 'include',
+      mode: 'cors',
     })
 
     if (response.status === 401) {
-      // Try to get refresh token from cookies if not in memory
-      if (!refreshTokenInMemory) {
-        const tokenFromCookies = getRefreshTokenFromCookies()
-        if (tokenFromCookies) {
-          refreshTokenInMemory = tokenFromCookies
-        }
-      }
-      
-      if (refreshTokenInMemory) {
-        const refreshed = await refreshAccessToken()
+      // Try to refresh token
+      const refreshed = await refreshAccessToken()
 
-        if (refreshed) {
-          return getUserProfile()
+      if (refreshed) {
+        // Retry with refreshed token
+        const retryResponse = await fetch(`${USER_SERVICE_URL}/users/me`, {
+          credentials: 'include',
+          mode: 'cors',
+        })
+        
+        if (retryResponse.ok) {
+          const userData = await retryResponse.json()
+          return {
+            ...userData,
+            isAuthenticated: true,
+          }
         }
       }
 
@@ -183,10 +199,9 @@ export async function getUserProfile(): Promise<UserContextClient | null> {
 
 export async function checkAuthenticated(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_URL}/api/auth/check`, {
-      credentials: 'include',
-    })
-    return response.ok
+    // Check if we have a refresh token in memory or cookies
+    const hasRefreshToken = refreshTokenInMemory || getRefreshTokenFromCookies()
+    return !!hasRefreshToken
   } catch {
     return false
   }

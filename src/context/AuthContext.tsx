@@ -44,12 +44,12 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
     } else if (serverError) {
       setLocalError(serverError)
       setLocalUser(null)
-    } else if (!serverLoading && !serverUser) {
+    } else if (!serverLoading && !serverUser && isFetched) {
       setLocalUser(null)
       setLocalError(null)
     }
     setLocalLoading(serverLoading)
-  }, [serverUser, serverLoading, serverError])
+  }, [serverUser, serverLoading, serverError, isFetched])
 
   // Set up refresh token interval
   useEffect(() => {

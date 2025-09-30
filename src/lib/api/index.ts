@@ -62,10 +62,6 @@ export async function fetchWithAuth<T>(
   }
 }
 
-export const usersApi = {
-  getProfile: () => fetchWithAuth('/api/users/me'),
-  getAll: () => fetchWithAuth('/api/users'),
-}
 
 export const vehiclesApi = {
   getAll: () => fetchWithAuth('/api/vehicles'),
