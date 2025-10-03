@@ -3,7 +3,7 @@
 import {useAuth} from '@/context/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import {useLogout} from '@/hooks/useAuth'
-import {useEffect} from 'react'
+import Link from 'next/link'
 
 export default function Dashboard() {
   const {user, loading} = useAuth()
@@ -29,7 +29,19 @@ export default function Dashboard() {
                 <p className='text-gray-500'>Roles: {user?.roles.join(', ')}</p>
               </div>
 
-              <div className='mt-4'>
+              <div className='mt-4 flex flex-wrap gap-4'>
+                <Link
+                  href='/routes'
+                  className='bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md font-medium'
+                >
+                  🗺️ Route Optimization
+                </Link>
+                <Link
+                  href='/route-optimization'
+                  className='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md font-medium'
+                >
+                  📍 Simple Routes
+                </Link>
                 <button
                   onClick={handleLogout}
                   className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded'

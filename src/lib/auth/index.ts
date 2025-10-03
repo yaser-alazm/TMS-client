@@ -4,12 +4,9 @@ export interface UserContextClient extends UserContext {
   isAuthenticated: boolean
 }
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== 'undefined' && window.location.origin) ||
-  'http://localhost:4000'
+const API_URL = 'http://localhost:4000'  // Gateway for app API calls
 
-const USER_SERVICE_URL = 'http://localhost:4001'
+const USER_SERVICE_URL = 'http://localhost:4001'  // Direct connection to user service for auth
 
 let refreshTokenInMemory: string | null = null
 
@@ -65,7 +62,7 @@ export async function login(credentials: LoginDto): Promise<AuthResponse> {
 
 export async function register(userData: CreateUserDto): Promise<AuthResponse> {
   try {
-    const response = await fetch(`${USER_SERVICE_URL}/auth/register`, {
+    const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(userData),
@@ -106,14 +103,13 @@ export async function refreshAccessToken(): Promise<boolean> {
     if (!token) {
       return false;
     }
-    
-    const response = await fetch(`${USER_SERVICE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({refreshToken: token}),
-      mode: 'cors',
-      credentials: 'include',
-    })
+      const response = await fetch(`${USER_SERVICE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({refreshToken: token}),
+        mode: 'cors',
+        credentials: 'include',
+      })
 
     if (!response.ok) {
       refreshTokenInMemory = null
