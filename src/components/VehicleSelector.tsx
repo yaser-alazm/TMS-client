@@ -2,10 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { Vehicle } from '@yatms/common';
-import { useBrowserVehicles } from '../hooks/useKafkaVehicles';
+import { useVehicles } from '../hooks/useVehicles';
 
 interface VehicleSelectorProps {
-  vehicles: Vehicle[];
   selectedVehicle: Vehicle | null;
   onVehicleSelect: (vehicle: Vehicle) => void;
   onVehiclesLoad: (vehicles: Vehicle[]) => void;
@@ -16,8 +15,10 @@ export const VehicleSelector: React.FC<VehicleSelectorProps> = ({
   onVehicleSelect,
   onVehiclesLoad,
 }) => {
-  const { vehicles, loading, error: kafkaError, refreshVehicles } = useBrowserVehicles();
+  const { data: vehiclesResponse, isLoading: loading, error: vehicleError, refetch } = useVehicles();
   const [localError, setLocalError] = useState<string | null>(null);
+
+  const vehicles = vehiclesResponse?.vehicles || [];
 
   // Update parent component when vehicles change
   useEffect(() => {
@@ -26,12 +27,11 @@ export const VehicleSelector: React.FC<VehicleSelectorProps> = ({
     }
   }, [vehicles, onVehiclesLoad]);
 
-  // Combine Kafka error with local errors
-  const error = kafkaError || localError;
+  const error = vehicleError?.message || localError;
 
   const loadVehicles = async () => {
     try {
-      await refreshVehicles();
+      await refetch();
       setLocalError(null);
     } catch (err) {
       setLocalError(`Failed to load vehicles: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -56,15 +56,26 @@ export const VehicleSelector: React.FC<VehicleSelectorProps> = ({
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'text-green-600';
       case 'maintenance':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'text-yellow-600';
       case 'rented':
-        return 'bg-blue-100 text-blue-800';
+        return 'text-blue-600';
       case 'retired':
-        return 'bg-gray-100 text-gray-800';
+        return 'text-gray-600';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'text-gray-600';
+    }
+  };
+
+  const handleVehicleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const vehicleId = event.target.value;
+    if (vehicleId === '') {
+      return;
+    }
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (vehicle) {
+      onVehicleSelect(vehicle);
     }
   };
 
@@ -111,64 +122,61 @@ export const VehicleSelector: React.FC<VehicleSelectorProps> = ({
           <p className="text-sm">Contact your fleet manager</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {vehicles.map((vehicle) => (
-            <div
-              key={vehicle.id}
-              onClick={() => onVehicleSelect(vehicle)}
-              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                selectedVehicle?.id === vehicle.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="vehicle-select" className="block text-sm font-medium text-gray-700 mb-2">
+              Choose a vehicle
+            </label>
+            <select
+              id="vehicle-select"
+              value={selectedVehicle?.id || ''}
+              onChange={handleVehicleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="text-2xl">{getVehicleIcon(vehicle.type)}</div>
-                  <div>
-                    <div className="font-semibold text-gray-900">
-                      {vehicle.make} {vehicle.model}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {vehicle.year} • {vehicle.registrationNumber}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      📍 {vehicle.fuelType} • 👥 {vehicle.capacity} seats
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>
-                    {vehicle.status}
-                  </div>
-                  {selectedVehicle?.id === vehicle.id && (
-                    <div className="mt-2 text-blue-600 text-sm">✓ Selected</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {selectedVehicle && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-medium text-blue-900">
-                {getVehicleIcon(selectedVehicle.type)} {selectedVehicle.make} {selectedVehicle.model}
-              </div>
-              <div className="text-sm text-blue-700">
-                Capacity: {selectedVehicle.capacity} seats • Fuel: {selectedVehicle.fuelType}
-              </div>
-            </div>
-            <button
-              onClick={() => onVehicleSelect(null as any)}
-              className="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              Change
-            </button>
+              <option value="">Select a vehicle...</option>
+              {vehicles.map((vehicle) => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {getVehicleIcon(vehicle.type)} {vehicle.make} {vehicle.model} ({vehicle.year}) - {vehicle.status}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {selectedVehicle && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className="text-xl">{getVehicleIcon(selectedVehicle.type)}</span>
+                    <div>
+                      <div className="font-semibold text-blue-900">
+                        {selectedVehicle.make} {selectedVehicle.model}
+                      </div>
+                      <div className="text-sm text-blue-700">
+                        {selectedVehicle.year} • {selectedVehicle.registrationNumber}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm text-blue-700">
+                    <div>📍 {selectedVehicle.fuelType}</div>
+                    <div>👥 {selectedVehicle.capacity} seats</div>
+                    <div className={`font-medium ${getStatusColor(selectedVehicle.status)}`}>
+                      Status: {selectedVehicle.status}
+                    </div>
+                    <div>🆔 {selectedVehicle.id.slice(0, 8)}...</div>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => onVehicleSelect(null as any)}
+                  className="ml-4 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-md transition-colors"
+                >
+                  Change
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

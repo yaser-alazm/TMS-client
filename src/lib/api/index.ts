@@ -64,5 +64,5 @@ export async function fetchWithAuth<T>(
 
 
 export const vehiclesApi = {
-  getAll: () => fetchWithAuth('/api/vehicles'),
+  getAll: () => fetchWithAuth('/vehicles'),
 }

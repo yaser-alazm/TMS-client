@@ -21,7 +21,7 @@ export function useVehicles(filters?: VehicleFilterDto) {
         })
       }
 
-      const url = `/api/vehicles${params.toString() ? `?${params.toString()}` : ''}`
+      const url = `/vehicles${params.toString() ? `?${params.toString()}` : ''}`
       return fetchWithAuth(url)
     },
   })
@@ -30,7 +30,7 @@ export function useVehicles(filters?: VehicleFilterDto) {
 export function useVehicle(id: string) {
   return useQuery({
     queryKey: queryKeys.vehicles.detail(id),
-    queryFn: () => fetchWithAuth(`/api/vehicles/${id}`),
+    queryFn: () => fetchWithAuth(`/vehicles/${id}`),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
   })
@@ -41,7 +41,7 @@ export function useCreateVehicle() {
 
   return useMutation({
     mutationFn: (vehicleData: CreateVehicleDto) =>
-      fetchWithAuth('/api/vehicles', {
+      fetchWithAuth('/vehicles', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(vehicleData),
@@ -58,7 +58,7 @@ export function useUpdateVehicle() {
 
   return useMutation({
     mutationFn: ({id, data}: {id: string; data: UpdateVehicleDto}) =>
-      fetchWithAuth(`/api/vehicles/${id}`, {
+      fetchWithAuth(`/vehicles/${id}`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data),
@@ -76,7 +76,7 @@ export function useDeleteVehicle() {
 
   return useMutation({
     mutationFn: (id: string) =>
-      fetchWithAuth(`/api/vehicles/${id}`, {
+      fetchWithAuth(`/vehicles/${id}`, {
         method: 'DELETE',
       }),
     onSuccess: (_, id) => {
