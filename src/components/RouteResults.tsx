@@ -16,9 +16,8 @@ export const RouteResults: React.FC<RouteResultsProps> = ({ result }) => {
     return `${minutes}m`;
   };
 
-  const formatDistance = (meters: number) => {
-    const km = meters / 1000;
-    return `${km.toFixed(2)} km`;
+  const formatDistance = (kilometers: number) => {
+    return `${kilometers.toFixed(2)} km`;
   };
 
   const formatTime = (seconds: number) => {
