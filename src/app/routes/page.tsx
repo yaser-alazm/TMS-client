@@ -112,79 +112,74 @@ export default function RoutesPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Panel - Controls */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Vehicle Selection */}
-              <VehicleSelector
-                selectedVehicle={selectedVehicle}
-                onVehicleSelect={setSelectedVehicle}
-                onVehiclesLoad={setVehicles}
-              />
-
-              {/* Route Preferences */}
-              <RoutePreferences
-                preferences={preferences}
-                onPreferencesChange={setPreferences}
-              />
-            </div>
-
-            <div className="lg:col-span-2 space-y-4">
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <RoutePlanningMap
-                  stops={stops}
-                  onStopsChange={setStops}
-                  optimizedRoute={optimizationResult?.optimizedRoute}
-                  isOptimizing={isOptimizing}
-                />
-              </div>
-
-              <div className="bg-white rounded-lg shadow p-4">
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleOptimizeRoute}
-                    disabled={isOptimizing || !selectedVehicle || stops.length < 2}
-                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
-                  >
-                    {isOptimizing ? (
-                      <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Optimizing Route...
-                      </span>
-                    ) : (
-                      'Optimize Route'
-                    )}
-                  </button>
-
-                  <button
-                    onClick={handleResetAll}
-                    disabled={isOptimizing}
-                    className="px-6 py-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
-                  >
-                    <span className="flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Reset All
-                    </span>
-                  </button>
-                </div>
-
-                {error && (
-                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-red-900 text-sm">{error}</p>
-                  </div>
-                )}
-              </div>
-
-              {optimizationResult && (
-                <RouteResults result={optimizationResult} />
-              )}
-            </div>
+          <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
+            <RoutePlanningMap
+              stops={stops}
+              onStopsChange={setStops}
+              optimizedRoute={optimizationResult?.optimizedRoute}
+              isOptimizing={isOptimizing}
+            />
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <VehicleSelector
+              selectedVehicle={selectedVehicle}
+              onVehicleSelect={setSelectedVehicle}
+              onVehiclesLoad={setVehicles}
+            />
+
+            <RoutePreferences
+              preferences={preferences}
+              onPreferencesChange={setPreferences}
+            />
+          </div>
+
+          {/* CTA Buttons Section */}
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
+            <div className="flex gap-3">
+              <button
+                onClick={handleOptimizeRoute}
+                disabled={isOptimizing || !selectedVehicle || stops.length < 2}
+                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+              >
+                {isOptimizing ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Optimizing Route...
+                  </span>
+                ) : (
+                  'Optimize Route'
+                )}
+              </button>
+
+              <button
+                onClick={handleResetAll}
+                disabled={isOptimizing}
+                className="px-6 py-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
+              >
+                <span className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Reset All
+                </span>
+              </button>
+            </div>
+
+            {error && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-900 text-sm">{error}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Results Section */}
+          {optimizationResult && (
+            <RouteResults result={optimizationResult} />
+          )}
         </div>
       </div>
     </ProtectedRoute>
