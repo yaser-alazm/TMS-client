@@ -11,116 +11,91 @@ export const RoutePreferences: React.FC<RoutePreferencesProps> = ({
   preferences,
   onPreferencesChange,
 }) => {
-  const handleAvoidTollsChange = (checked: boolean) => {
-    onPreferencesChange({ ...preferences, avoidTolls: checked });
-  };
-
-  const handleAvoidHighwaysChange = (checked: boolean) => {
-    onPreferencesChange({ ...preferences, avoidHighways: checked });
-  };
-
   const handleOptimizeForChange = (value: 'time' | 'distance' | 'fuel') => {
     onPreferencesChange({ ...preferences, optimizeFor: value });
+  };
+
+  const handleAvoidTollsChange = (value: 'yes' | 'no') => {
+    onPreferencesChange({ ...preferences, avoidTolls: value === 'yes' });
+  };
+
+  const handleAvoidHighwaysChange = (value: 'yes' | 'no') => {
+    onPreferencesChange({ ...preferences, avoidHighways: value === 'yes' });
   };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Route Preferences</h3>
       
-      <div className="space-y-6">
-        {/* Optimization Type */}
+      <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-3">
+          <label htmlFor="optimize-for" className="block text-sm font-medium text-gray-700 mb-2">
             🎯 Optimization Priority
           </label>
-          <div className="space-y-2">
-            {[
-              { type: 'time', label: 'Fastest', icon: '⏱️', description: 'Minimize travel time' },
-              { type: 'distance', label: 'Shortest', icon: '📏', description: 'Minimize distance' },
-              { type: 'fuel', label: 'Most Efficient', icon: '⛽', description: 'Minimize fuel consumption' },
-            ].map(({ type, label, icon, description }) => (
-              <label
-                key={type}
-                className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                  preferences.optimizeFor === type
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="optimizeFor"
-                  value={type}
-                  checked={preferences.optimizeFor === type}
-                  onChange={(e) => handleOptimizeForChange(e.target.value as any)}
-                  className="sr-only"
-                />
-                <div className="flex items-center space-x-3 w-full">
-                  <div className="text-xl">{icon}</div>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{label}</div>
-                    <div className="text-sm text-gray-600">{description}</div>
-                  </div>
-                  {preferences.optimizeFor === type && (
-                    <div className="text-blue-600">✓</div>
-                  )}
-                </div>
-              </label>
-            ))}
+          <select
+            id="optimize-for"
+            value={preferences.optimizeFor}
+            onChange={(e) => handleOptimizeForChange(e.target.value as any)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+          >
+            <option value="time">⏱️ Fastest - Minimize travel time</option>
+            <option value="distance">📏 Shortest - Minimize distance</option>
+            <option value="fuel">⛽ Most Efficient - Minimize fuel consumption</option>
+          </select>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="avoid-tolls" className="block text-sm font-medium text-gray-700 mb-2">
+              💰 Avoid Toll Roads
+            </label>
+            <select
+              id="avoid-tolls"
+              value={preferences.avoidTolls ? 'yes' : 'no'}
+              onChange={(e) => handleAvoidTollsChange(e.target.value as 'yes' | 'no')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+            >
+              <option value="no">No - Use toll roads if faster</option>
+              <option value="yes">Yes - Avoid toll roads and highways with fees</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="avoid-highways" className="block text-sm font-medium text-gray-700 mb-2">
+              🛣️ Avoid Highways
+            </label>
+            <select
+              id="avoid-highways"
+              value={preferences.avoidHighways ? 'yes' : 'no'}
+              onChange={(e) => handleAvoidHighwaysChange(e.target.value as 'yes' | 'no')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+            >
+              <option value="no">No - Use highways when faster</option>
+              <option value="yes">Yes - Use local roads instead of highways</option>
+            </select>
           </div>
         </div>
 
-        {/* Route Constraints */}
-        <div>
-          <label className="block text-sm font-medium text-gray-900 mb-3">
-            🚫 Avoid
-          </label>
-          <div className="space-y-3">
-            <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.avoidTolls}
-                onChange={(e) => handleAvoidTollsChange(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <div className="ml-3">
-                <div className="flex items-center">
-                  <span className="text-lg mr-2">💰</span>
-                  <span className="font-medium text-gray-900">Toll Roads</span>
-                </div>
-                <div className="text-sm text-gray-600">Avoid toll roads and highways with fees</div>
-              </div>
-            </label>
-
-            <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.avoidHighways}
-                onChange={(e) => handleAvoidHighwaysChange(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <div className="ml-3">
-                <div className="flex items-center">
-                  <span className="text-lg mr-2">🛣️</span>
-                  <span className="font-medium text-gray-900">Highways</span>
-                </div>
-                <div className="text-sm text-gray-600">Use local roads instead of highways when possible</div>
-              </div>
-            </label>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+          <div className="text-sm text-gray-700">
+            <div className="font-medium mb-1">Current Settings:</div>
+            <div className="space-y-1 text-xs">
+              <div>• Priority: {preferences.optimizeFor === 'time' ? '⏱️ Fastest' : preferences.optimizeFor === 'distance' ? '📏 Shortest' : '⛽ Most Efficient'}</div>
+              <div>• Toll Roads: {preferences.avoidTolls ? '🚫 Avoided' : '✅ Allowed'}</div>
+              <div>• Highways: {preferences.avoidHighways ? '🚫 Avoided' : '✅ Allowed'}</div>
+            </div>
           </div>
         </div>
 
-        {/* Optimization Info */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <div className="flex items-start">
-            <div className="text-blue-600 mr-3 mt-0.5">ℹ️</div>
-            <div className="text-sm text-blue-800">
+            <div className="text-blue-600 mr-2 mt-0.5 text-sm">ℹ️</div>
+            <div className="text-xs text-blue-800">
               <div className="font-medium mb-1">Optimization Notes:</div>
-              <ul className="space-y-1 text-xs">
-                <li>• Routes are calculated using real-time Google Maps data</li>
-                <li>• Duration estimates include traffic conditions</li>
-                <li>• Multiple optimization attempts may provide better results</li>
-                <li>• Avoidances may increase travel distance or time</li>
+              <ul className="space-y-1">
+                <li>• Routes use real-time Google Maps data</li>
+                <li>• Duration includes traffic conditions</li>
+                <li>• Avoidances may increase travel time</li>
               </ul>
             </div>
           </div>
